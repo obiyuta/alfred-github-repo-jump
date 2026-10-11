@@ -39,7 +39,7 @@ ERROR_BACKOFF_SEC = 300   # after a failed refresh, do not retry automatically f
 GH_TIMEOUT_SEC = 120
 MIN_TTL_SEC = 60
 INCLUDE_ARCHIVED = os.environ.get("INCLUDE_ARCHIVED", "0") == "1"
-MAX_ITEMS = 40
+MAX_ITEMS = 500  # Alfred learns only from results it receives, so do not cut early
 ENC = "utf-8"
 
 
@@ -72,10 +72,27 @@ def gh(*args):
     return out.stdout
 
 
+def host_of(url):
+    return urllib.parse.urlsplit(url).netloc or "github.com"
+
+
+def make_uid(repo):
+    """Stable key for Alfred's learning, computed once per refresh and stored in the cache.
+
+    The numeric repository id survives renames and transfers (node ids change format
+    over time). Both forms are scoped by host because github.com and GHE can collide.
+    """
+    host = host_of(repo["url"])
+    rid = repo.get("id")
+    if isinstance(rid, (int, str)) and not isinstance(rid, bool) and str(rid) not in ("", "null"):
+        return f"{host}:{rid}"
+    return f"{host}:{repo['nameWithOwner']}"
+
+
 def fetch_repos():
     """All repositories visible to the authenticated user (owner, collaborator, org member)."""
     raw = gh("api", "user/repos", "--paginate", "-X", "GET", "-f", "per_page=100",
-             "--jq", '.[] | {nameWithOwner: .full_name, description, url: .html_url, '
+             "--jq", '.[] | {id, nameWithOwner: .full_name, description, url: .html_url, '
                      'isArchived: .archived, isPrivate: .private, pushedAt: .pushed_at}')
     repos = {}
     for line in raw.splitlines():
@@ -83,6 +100,7 @@ def fetch_repos():
             r = json.loads(line)
             r["matchFull"] = r["nameWithOwner"].lower()      # precomputed so score() does
             r["matchDesc"] = (r.get("description") or "").lower()  # no per-keystroke lower()
+            r["uid"] = make_uid(r)
             repos[r["nameWithOwner"]] = r
     # ISO-8601 strings sort correctly as text; this order is reused by filter_items.
     return sorted(repos.values(), key=lambda r: r.get("pushedAt") or "", reverse=True)
@@ -122,7 +140,7 @@ def recent_error():
     return None
 
 
-REPO_STR_KEYS = ("nameWithOwner", "url", "matchFull", "matchDesc")
+REPO_STR_KEYS = ("nameWithOwner", "url", "matchFull", "matchDesc")  # "uid" is checked separately
 
 
 def valid_cache(data):
@@ -134,7 +152,7 @@ def valid_cache(data):
     if not isinstance(fetched_at, (int, float)) or isinstance(fetched_at, bool) or not math.isfinite(fetched_at):
         return False
     return all(isinstance(r, dict) and all(isinstance(r.get(k), str) for k in REPO_STR_KEYS)
-               and "/" in r["matchFull"] for r in repos)
+               and "/" in r["matchFull"] and isinstance(r.get("uid", ""), str) for r in repos)
 
 
 def read_cache():
@@ -212,7 +230,8 @@ def load_state():
     data = read_cache()
     error = recent_error()
     age = time.time() - data["fetched_at"] if data else None
-    stale = age is None or age < 0 or age > ttl_seconds()  # age < 0: clock moved backwards
+    stale = (age is None or age < 0 or age > ttl_seconds()  # age < 0: clock moved backwards
+             or any("uid" not in r for r in data["repos"]))  # v1.0.0 cache: switch uids now
     refreshing = stale and ensure_refreshing(error)
     return CacheState(data["repos"] if data else None, refreshing, error)
 
@@ -254,10 +273,6 @@ def score(query, repo):
     return None
 
 
-def host_of(url):
-    return urllib.parse.urlsplit(url).netloc or "github.com"
-
-
 def item(repo):
     full = repo["nameWithOwner"]
     url = repo["url"]
@@ -268,8 +283,10 @@ def item(repo):
         badges.append("📦")
     desc = repo.get("description") or ""
     subtitle = " ".join(badges + [desc]).strip() or url
-    # No "uid": Alfred's usage learning would reorder results and override score().
+    # "uid" lets Alfred learn which result you pick for what you typed (partial input
+    # included) and move it up next time. score() orders everything Alfred has not learned.
     return {
+        "uid": repo.get("uid") or make_uid(repo),  # make_uid only for a v1.0.0 cache
         "title": full,
         "subtitle": subtitle,
         "arg": url,

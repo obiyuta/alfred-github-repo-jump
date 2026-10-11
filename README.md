@@ -30,6 +30,8 @@ Run `ghr` rather than invoking `repo_jump.py` from a terminal: Alfred passes the
 
 Ranking: exact match, prefix, substring, owner match, all words found, description, then subsequence (fuzzy) match. A query is matched against the repository name, or against `owner/name` when it contains `/`. Ties are broken by most recent push.
 
+Alfred also learns from your choices, and its learning takes precedence over the order above: a repository you keep picking for what you type moves to the top, even above an exact match. Alfred learns from partial input too, so a pick made while typing `doc` can also affect `docs`. Up to 500 results are listed. Learning survives repository renames and transfers. To reset it, use Alfred Preferences > Advanced > Clear Knowledge.
+
 The last row always searches GitHub for the query, for repositories you do not have access to. `Tab` completes the full `owner/name`.
 
 ## How it works
