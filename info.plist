@@ -356,7 +356,7 @@ Details: https://github.com/obiyuta/alfred-github-repo-jump</string>
 	<key>variablesdontexport</key>
 	<array/>
 	<key>version</key>
-	<string>1.0.0</string>
+	<string>1.1.0</string>
 	<key>webaddress</key>
 	<string>https://github.com/obiyuta/alfred-github-repo-jump</string>
 </dict>
