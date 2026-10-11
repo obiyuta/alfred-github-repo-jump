@@ -30,7 +30,14 @@ jobs:
 
       - name: Lint shell scripts
         # one file per call: "bash -n a b" only checks a and treats b as an argument
-        run: for f in install.sh build.sh; do bash -n "$f"; done
+        run: for f in install.sh build.sh bump-version.sh; do bash -n "$f"; done
+
+      - name: Version bump helper
+        run: |
+          ./bump-version.sh 9.9.9
+          /usr/bin/python3 tests/check_plist.py
+          test "$(git diff --numstat info.plist)" = "$(printf '1\t1\tinfo.plist')"
+          git checkout -- info.plist
 
       - name: Smoke test
         run: /usr/bin/python3 tests/smoke.py
