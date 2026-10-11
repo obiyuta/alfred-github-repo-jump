@@ -1,5 +1,11 @@
 # alfred-github-repo-jump
 
+[![Release](https://img.shields.io/github/v/release/obiyuta/alfred-github-repo-jump)](https://github.com/obiyuta/alfred-github-repo-jump/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/obiyuta/alfred-github-repo-jump/total)](https://github.com/obiyuta/alfred-github-repo-jump/releases)
+[![check](https://img.shields.io/github/actions/workflow/status/obiyuta/alfred-github-repo-jump/check.yml?branch=main&label=check)](https://github.com/obiyuta/alfred-github-repo-jump/actions/workflows/check.yml)
+[![License](https://img.shields.io/github/license/obiyuta/alfred-github-repo-jump)](LICENSE)
+[![Alfred 5](https://img.shields.io/badge/Alfred-5-5C1F87)](https://www.alfredapp.com/)
+
 [English](README.md) | 日本語
 
 Alfred ワークフロー。`gh <名前>` と打つだけで、アクセスできる GitHub リポジトリに一発で飛ぶ。
@@ -11,7 +17,7 @@ Alfred ワークフロー。`gh <名前>` と打つだけで、アクセスで�
 1. GitHub CLI をインストールしてログインする: `brew install gh && gh auth login`
 2. [最新リリース](https://github.com/obiyuta/alfred-github-repo-jump/releases/latest)から `GitHub-Repo-Jump.alfredworkflow` をダウンロードして開く。
 
-リポジトリをクローンした場合は `./install.sh` で Alfred の設定ディレクトリにコピーできる。
+リポジトリをクローンした場合は `./install.sh` でビルドして Alfred の設定ディレクトリにインストールできる。
 
 Alfred 5（Powerpack）と `/usr/bin/python3` が必要。後者は Xcode Command Line Tools を入れると使える（`xcode-select --install`。Homebrew を入れていれば導入済み）。
 
@@ -44,6 +50,10 @@ Alfred のワークフロー設定画面から変更できる。
 
 - **Cache TTL (hours)**: キャッシュを新しいとみなす時間。
 - **Include archived**: アーカイブ済みリポジトリも候補に含める（デフォルトでは非表示）。
+
+## コントリビュート
+
+開発の手順、コミットメッセージのルール、PR の扱いは [CONTRIBUTING.md](CONTRIBUTING.md)（英語）を参照。
 
 ## ライセンス
 

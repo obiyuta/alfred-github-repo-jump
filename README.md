@@ -1,5 +1,11 @@
 # alfred-github-repo-jump
 
+[![Release](https://img.shields.io/github/v/release/obiyuta/alfred-github-repo-jump)](https://github.com/obiyuta/alfred-github-repo-jump/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/obiyuta/alfred-github-repo-jump/total)](https://github.com/obiyuta/alfred-github-repo-jump/releases)
+[![check](https://img.shields.io/github/actions/workflow/status/obiyuta/alfred-github-repo-jump/check.yml?branch=main&label=check)](https://github.com/obiyuta/alfred-github-repo-jump/actions/workflows/check.yml)
+[![License](https://img.shields.io/github/license/obiyuta/alfred-github-repo-jump)](LICENSE)
+[![Alfred 5](https://img.shields.io/badge/Alfred-5-5C1F87)](https://www.alfredapp.com/)
+
 English | [日本語](README.ja.md)
 
 Alfred workflow: type `gh <name>` and jump straight to any GitHub repository you have access to.
@@ -11,7 +17,7 @@ Repositories are listed through the authenticated [`gh` CLI](https://cli.github.
 1. Install and log in to the GitHub CLI: `brew install gh && gh auth login`
 2. Download `GitHub-Repo-Jump.alfredworkflow` from the [latest release](https://github.com/obiyuta/alfred-github-repo-jump/releases/latest) and open it.
 
-Or from a checkout: `./install.sh` copies the workflow into your Alfred preferences.
+Or from a checkout: `./install.sh` builds the workflow and installs it into your Alfred preferences.
 
 Requires Alfred 5 with the Powerpack and `/usr/bin/python3`, which macOS provides once the Xcode Command Line Tools are installed (`xcode-select --install`; Homebrew installs them for you).
 
@@ -44,6 +50,10 @@ Open the workflow's configuration in Alfred:
 
 - **Cache TTL (hours)**: how long the cached list is considered fresh.
 - **Include archived**: show archived repositories too (hidden by default).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development, commit message rules and how pull requests are handled.
 
 ## License
 
