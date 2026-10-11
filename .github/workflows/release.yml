@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  # A tag can point at any commit, so run the full checks on it before publishing.
+  check:
+    uses: ./.github/workflows/check.yml
+    permissions:
+      contents: read
+
+  release:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check that info.plist version matches the tag
+        run: |
+          version="$(python3 -c 'import plistlib; print(plistlib.load(open("info.plist", "rb"))["version"])')"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::info.plist version is $version but the tag is $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+      - name: Download the package built by check
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-package
+          path: package
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          assets=(package/*.alfredworkflow)
+          if [ "${#assets[@]}" -ne 1 ]; then
+            echo "::error::expected one .alfredworkflow from check, found ${#assets[@]}"
+            exit 1
+          fi
+          asset="${assets[0]}"
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            # Re-run after a partial failure: replace the asset instead of failing.
+            gh release upload "$GITHUB_REF_NAME" "$asset" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$asset" \
+              --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+          fi

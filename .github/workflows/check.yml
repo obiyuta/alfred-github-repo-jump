@@ -1,0 +1,49 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_call:  # release.yml runs the same checks before publishing
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    # macOS so the checks use the same /usr/bin/python3 and plutil that Alfred users have.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python version used by Alfred
+        run: /usr/bin/python3 --version
+
+      - name: Compile script
+        run: /usr/bin/python3 -m py_compile repo_jump.py
+
+      - name: Lint info.plist
+        run: plutil -lint info.plist
+
+      - name: Check workflow wiring
+        run: /usr/bin/python3 tests/check_plist.py
+
+      - name: Lint shell scripts
+        # one file per call: "bash -n a b" only checks a and treats b as an argument
+        run: for f in install.sh build.sh; do bash -n "$f"; done
+
+      - name: Smoke test
+        run: /usr/bin/python3 tests/smoke.py
+
+      - name: Build package
+        id: build
+        run: echo "path=$(./build.sh)" >> "$GITHUB_OUTPUT"
+
+      # release.yml publishes exactly this file, built and checked on macOS.
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-package
+          path: ${{ steps.build.outputs.path }}
+          if-no-files-found: error
+          retention-days: 7
